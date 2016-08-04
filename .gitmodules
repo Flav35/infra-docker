@@ -1,0 +1,6 @@
+[submodule "njs-traefik-docker"]
+	path = njs-traefik-docker
+	url = git@github.com:Flav35/njs-traefik-docker.git
+[submodule "api-provider"]
+	path = api-provider
+	url = git@github.com:Flav35/api-provider.git
