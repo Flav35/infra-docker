@@ -4,3 +4,6 @@
 [submodule "api-provider"]
 	path = api-provider
 	url = git@github.com:Flav35/api-provider.git
+[submodule "bind"]
+	path = bind
+	url = git@github.com:Flav35/bind.git

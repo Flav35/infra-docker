@@ -5,14 +5,16 @@ services:
 # Traefik
   traefik:
     image: traefik
+    restart: always
     ports:
-        - "80:80"
-        - "443:443"
-        - "8080:8080"
+        - "163.172.35.163:80:80"
+        - "163.172.35.163:443:443"
+        - "163.172.35.163:8080:8080"
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - ./traefik/traefik.toml:/traefik.toml
         - ./traefik/acme.json:/acme.json
+
 # Geoip API nodejs app
   nodejs-app:
     build:
@@ -25,3 +27,30 @@ services:
         - "traefik.port=3000"
     depends_on:
         - traefik
+
+# Local registry
+  registry:
+    image: registry:2
+    restart: always
+    environment:
+        REGISTRY_AUTH: htpasswd
+        REGISTRY_AUTH_HTPASSWD_PATH: /var/lib/registry/conf.d/htpasswd
+        REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+        - /var/lib/registry:/var/lib/registry
+    labels:
+        - "traefik.backend=registry"
+        - "traefik.frontend.rule=Host:registry.flavien-hardy.me"
+        - "traefik.port=5000"
+    depends_on:
+        - traefik
+
+  bind:
+    image: sameersbn/bind
+    ports:
+        - "53:53/tcp"
+        - "53:53/udp"
+    volumes:
+        - ./bind/:/data/bind
+    environment:
+        - WEBMIN_ENABLED=False
