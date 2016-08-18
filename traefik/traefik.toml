@@ -82,16 +82,16 @@ watch = true
 
 [backends]
   [backends.dedi-os]
-    [backends.dedi-os.servers.horizon]
-        url = "http://10.91.132.82:80"
-        weight = 1
+    #[backends.dedi-os.servers.horizon]
+    #    url = "http://10.91.132.82:80"
+    #    weight = 1
 ##################################################################
 # Frontends
 ###################################################################
 #
 [frontends]
   [frontends.dedi-os]
-    backend = "dedi-os"
-    passHostHeader = true
-    [frontends.dedi-os.routes.horizon]
-      rule = "Host:cloud.flavien-hardy.me"
+    #backend = "dedi-os"
+    #passHostHeader = true
+    #[frontends.dedi-os.routes.horizon]
+    #  rule = "Host:cloud.flavien-hardy.me"
