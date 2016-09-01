@@ -7,3 +7,12 @@
 [submodule "bind"]
 	path = bind
 	url = git@github.com:Flav35/bind.git
+[submodule "consul"]
+	path = consul
+	url = git@github.com:Flav35/consul.git
+[submodule "share"]
+	path = share
+	url = git@github.com:Flav35/share.git
+[submodule "vault"]
+	path = vault
+	url = git@github.com:Flav35/vault.git
