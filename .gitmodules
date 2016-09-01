@@ -16,3 +16,6 @@
 [submodule "vault"]
 	path = vault
 	url = git@github.com:Flav35/vault.git
+[submodule "traefik"]
+	path = traefik
+	url = git@github.com:Flav35/traefik.git
