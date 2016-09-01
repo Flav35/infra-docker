@@ -77,11 +77,10 @@ services:
   vault:
     image: vault
     restart: always
-    environment:
-        - 'VAULT_LOCAL_CONFIG={"backend": {"file": {"path": "/vault/file"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "disable_mlock": true, "listener": {"tcp": {"address": "0.0.0.0:8200", "tls_disable": 1}}'
     command: server
     volumes:
         - vault:/vault/file
+        - ./vault/config:/vault/config
     labels:
         - "traefik.backend=fault"
         - "traefik.frontend.rule=Host:vault.flavien-hardy.me"
