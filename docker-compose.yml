@@ -4,6 +4,8 @@ version: '2'
 volumes:
   vault:
     external: true
+  consul:
+    external: true
 
 services:
 # Traefik
@@ -49,6 +51,7 @@ services:
     depends_on:
         - traefik
 
+# DNS
   bind:
     image: sameersbn/bind
     restart: always
@@ -60,7 +63,7 @@ services:
     environment:
         - WEBMIN_ENABLED=False
 
-# apache directory listing
+# Apache directory listing
   share:
     image: php:apache
     restart: always
@@ -73,7 +76,7 @@ services:
     depends_on:
         - traefik
 
-# vault
+# Vault @Hashicorp
   vault:
     image: vault
     restart: always
@@ -87,3 +90,12 @@ services:
         - "traefik.port=8200"
     depends_on:
         - traefik
+
+# Consul @Hashicorp
+  consul:
+    image: consul
+    restart: always
+    volumes:
+        - consul:/consul/data
+        - ./consul/config:/consul/config
+    network_mode: host
