@@ -19,3 +19,6 @@
 [submodule "traefik"]
 	path = traefik
 	url = git@github.com:Flav35/traefik.git
+[submodule "registry-web"]
+	path = registry-web
+	url = git@github.com:Flav35/registry-web.git
