@@ -6,6 +6,8 @@ volumes:
     external: true
   consul:
     external: true
+  registry-web-db:
+    external: true
 
 services:
 # Traefik
@@ -19,7 +21,7 @@ services:
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - ./traefik/traefik.toml:/traefik.toml
-        - ./traefik/acme.json:/acme.json
+        - ./traefik/acme-v2.json:/acme.json
 
 # Geoip API nodejs app
   nodejs-app:
@@ -29,7 +31,7 @@ services:
         - ./api-provider:/app
     labels:
         - "traefik.backend=nodejs-app"
-        - "traefik.frontend.rule=Host:api.flavien-hardy.me"
+        - "traefik.frontend.rule=Host:api.flhar.ovh"
         - "traefik.port=3000"
     depends_on:
         - traefik
@@ -46,10 +48,29 @@ services:
         - /var/lib/registry:/var/lib/registry
     labels:
         - "traefik.backend=registry"
-        - "traefik.frontend.rule=Host:registry.flavien-hardy.me"
+        - "traefik.frontend.rule=Host:registry.flhar.ovh"
         - "traefik.port=5000"
     depends_on:
         - traefik
+
+# Web registry viewer
+  registry-web:
+    image: hyper/docker-registry-web
+    restart: always
+    links:
+        - registry
+    environment:
+        REGISTRY_URL: http://registry:5000/v2
+    volumes:
+        - registry-web-db:/data
+        - ./registry-web/registry-web.yml:/conf/config.yml:ro
+    labels:
+        - "traefik.backend=registry-web"
+        - "traefik.frontend.rule=Host:registry-web.flhar.ovh"
+        - "traefik.port=8080"
+    depends_on:
+        - traefik
+        - registry
 
 # DNS
   bind:
@@ -71,7 +92,7 @@ services:
         - ./share:/var/www/html
     labels:
         - "traefik.backend=share"
-        - "traefik.frontend.rule=Host:share.flavien-hardy.me"
+        - "traefik.frontend.rule=Host:share.flhar.ovh"
         - "traefik.port=80"
     depends_on:
         - traefik
@@ -86,7 +107,7 @@ services:
         - ./vault/config:/vault/config
     labels:
         - "traefik.backend=fault"
-        - "traefik.frontend.rule=Host:vault.flavien-hardy.me"
+        - "traefik.frontend.rule=Host:vault.flhar.ovh"
         - "traefik.port=8200"
     depends_on:
         - traefik
