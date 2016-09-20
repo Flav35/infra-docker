@@ -22,3 +22,6 @@
 [submodule "registry-web"]
 	path = registry-web
 	url = git@github.com:Flav35/registry-web.git
+[submodule "draw.io"]
+	path = draw.io
+	url = https://github.com/jgraph/draw.io.git

@@ -97,6 +97,19 @@ services:
     depends_on:
         - traefik
 
+# Apache directory listing
+  draw:
+    image: httpd
+    restart: always
+    volumes:
+        - ./draw.io/war/:/usr/local/apache2/htdocs/
+    labels:
+        - "traefik.backend=draw"
+        - "traefik.frontend.rule=Host:draw.flhar.ovh"
+        - "traefik.port=80"
+    depends_on:
+        - traefik
+
 # Vault @Hashicorp
   vault:
     image: vault
