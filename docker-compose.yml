@@ -6,8 +6,6 @@ volumes:
     external: true
   consul:
     external: true
-  registry-web-db:
-    external: true
   apt-cacher-ng:
     external: true
 
@@ -57,19 +55,20 @@ services:
 
 # Web registry viewer
   registry-web:
-    image: hyper/docker-registry-web
+    image: konradkleine/docker-registry-frontend:v2
     restart: always
     links:
         - registry
     environment:
-        REGISTRY_URL: http://registry:5000/v2
-    volumes:
-        - registry-web-db:/data
-        - ./registry-web/registry-web.yml:/conf/config.yml:ro
+        ENV_DOCKER_REGISTRY_HOST: registry
+        ENV_DOCKER_REGISTRY_PORT: 5000
+    #volumes:
+    #    - registry-web-db:/data
+    #    - ./registry-web/registry-web.yml:/conf/config.yml:ro
     labels:
         - "traefik.backend=registry-web"
         - "traefik.frontend.rule=Host:registry-web.flhar.ovh"
-        - "traefik.port=8080"
+        - "traefik.port=80"
     depends_on:
         - traefik
         - registry
