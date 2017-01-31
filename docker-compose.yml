@@ -8,12 +8,17 @@ volumes:
     external: true
   apt-cacher-ng:
     external: true
+  asciinema:
+    external: true
+  mysql:
+    external: true
 
 services:
 # Traefik
   traefik:
     image: traefik
     restart: always
+    network_mode: host
     ports:
         - "163.172.35.163:80:80"
         - "163.172.35.163:443:443"
@@ -32,6 +37,7 @@ services:
     labels:
         - "traefik.backend=nodejs-app"
         - "traefik.frontend.rule=Host:api.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
         - "traefik.port=3000"
     depends_on:
         - traefik
@@ -49,6 +55,7 @@ services:
     labels:
         - "traefik.backend=registry"
         - "traefik.frontend.rule=Host:registry.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
         - "traefik.port=5000"
     depends_on:
         - traefik
@@ -68,6 +75,7 @@ services:
     labels:
         - "traefik.backend=registry-web"
         - "traefik.frontend.rule=Host:registry-web.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
         - "traefik.port=80"
     depends_on:
         - traefik
@@ -94,6 +102,7 @@ services:
     labels:
         - "traefik.backend=share"
         - "traefik.frontend.rule=Host:share.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
         - "traefik.port=80"
     depends_on:
         - traefik
@@ -116,6 +125,7 @@ services:
     labels:
         - "traefik.backend=draw"
         - "traefik.frontend.rule=Host:draw.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
         - "traefik.port=80"
     depends_on:
         - traefik
@@ -131,6 +141,7 @@ services:
     labels:
         - "traefik.backend=fault"
         - "traefik.frontend.rule=Host:vault.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
         - "traefik.port=8200"
     depends_on:
         - traefik
@@ -143,3 +154,65 @@ services:
         - consul:/consul/data
         - ./consul/config:/consul/config
     network_mode: host
+
+# Asciinema
+  postgres:
+    image: postgres
+  redis:
+    image: redis
+  sidekiq:
+    image: asciinema/asciinema.org
+    links:
+      - redis
+      - postgres
+    environment:
+      DATABASE_URL: "postgresql://postgres:mypass@postgres/asciinema"
+      REDIS_URL: "redis://redis:6379"
+      HOST: "asciinema.fhardy.fr"
+    command: "ruby start_sidekiq.rb"
+    volumes:
+      - asciinema:/app/uploads
+      - ./asciinema/asciinema.yml:/app/config/asciinema.yml
+      - ./asciinema/production.rb:/app/config/environments/production.rb
+  asciinema:
+    image: asciinema/asciinema.org
+    links:
+      - redis
+      - postgres
+    depends_on:
+      - sidekiq
+    environment:
+      DATABASE_URL: "postgresql://postgres:mypass@postgres/asciinema"
+      REDIS_URL: "redis://redis:6379"
+      HOST: "asciinema.fhardy.fr" # replace with actual hostname/ip.... ${HOSTNAME} doesn't seem to work..
+    volumes:
+      - asciinema:/app/uploads
+      - ./asciinema/asciinema.yml:/app/config/asciinema.yml
+    labels:
+        - "traefik.backend=asciinema"
+        - "traefik.frontend.rule=Host:asciinema.fhardy.fr"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.port=3000"
+
+# Etherpad
+  mysql:
+    image: mysql
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "totolitoto"
+
+  etherpad:
+    image: tvelocity/etherpad-lite
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    environment:
+      ETHERPAD_DB_HOST: "mysql"
+      ETHERPAD_DB_PASSWORD: "totolitoto"
+    labels:
+        - "traefik.backend=etherpad"
+        - "traefik.frontend.rule=Host:pads.fhardy.fr"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.port=9001"
