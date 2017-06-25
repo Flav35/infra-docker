@@ -1,0 +1,18 @@
+#!/usr/bin/ansible-playbook
+
+- hosts: rancher_targets
+  tasks:
+    - name: Install keepalived
+      yum: name=keepalived state=present
+    - name: configure keepalived
+      copy:
+        src: ./keepalived-master.conf
+        dest: /etc/keepalived/keepalived.conf
+      when: inventory_hostname == groups.rancher_targets[0]
+    - name: configure keepalived
+      copy:
+        src: ./keepalived-slave.conf
+        dest: /etc/keepalived/keepalived.conf
+      when: inventory_hostname != groups.rancher_targets[0]
+    - name: restart keepalived
+      service: name=keepalived state=restarted

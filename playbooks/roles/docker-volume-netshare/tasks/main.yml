@@ -1,0 +1,13 @@
+---
+# tasks file for docker-volume-netshare
+
+- name: Install package
+  apt:
+    deb: "{{ deb_url }}"
+    state: present
+
+- name: Start and enable service
+  systemd:
+    name: docker-volume-netshare
+    state: started
+    enabled: true

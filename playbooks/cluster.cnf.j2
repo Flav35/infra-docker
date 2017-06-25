@@ -1,0 +1,28 @@
+{#- list of cluster members -#}
+{%- set cluster_members = [] -%}
+{%- set iface_var = 'ansible_eth0' -%}
+{%- for host in groups.rancher_targets -%}
+  {%- set _ = cluster_members.append(hostvars[host][iface_var].ipv4.address) -%}
+{%- endfor -%}
+{%- set cluster_members_str = '' -%}
+{%- if cluster_members -%}
+  {%- set cluster_members_str = ",".join(cluster_members) -%}
+{%- endif -%}
+
+[mysqld]
+datadir = /var/lib/mysql
+bind-address = 0.0.0.0
+binlog_format = ROW
+wsrep_cluster_name = PXC
+wsrep_cluster_address = gcomm://{{ cluster_members_str }}
+wsrep_node_address = {{ hostvars[inventory_hostname][iface_var].ipv4.address }}
+wsrep_provider = /usr/lib/libgalera_smm.so
+wsrep_sst_method = xtrabackup-v2
+wsrep_sst_auth="sstuser:79be600a3b2f101ceba9"
+innodb_locks_unsafe_for_binlog = 1
+innodb_autoinc_lock_mode = 2
+default_storage_engine = InnoDB
+innodb_file_per_table
+#log_slow_queries = /var/log/mysql/mysql-slow.log
+
+!includedir /etc/mysql/conf.d/

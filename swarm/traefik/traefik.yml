@@ -1,0 +1,42 @@
+---
+version: '3.1'
+
+networks:
+  share:
+    external: true
+  registry:
+    external: true
+  draw:
+    external: true
+  etherpad:
+    external: true
+  asciinema:
+    external: true
+
+volumes:
+  traefik_conf:
+    driver: nfs
+    driver_opts:
+      share: "10.20.30.2:/traefik_conf"
+
+services:
+  traefik:
+    image: traefik
+    networks:
+      - share
+      - registry
+      - draw
+      - etherpad
+      - asciinema
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik_conf:/etc/traefik
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager

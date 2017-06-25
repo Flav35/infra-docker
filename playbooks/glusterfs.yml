@@ -1,0 +1,6 @@
+#!/usr/bin/ansible-playbook
+---
+
+- hosts: glusterfs
+  roles:
+    - glusterfs

@@ -1,0 +1,31 @@
+#!/usr/bin/ansible-playbook
+---
+
+- hosts: cluster
+  tasks:
+    - name: Install Kubernetes repository
+      yum_repository:
+        name: kubernetes
+        description: Kubernetes Official repository
+        baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+        gpgkey: |
+            https://packages.cloud.google.com/yum/doc/yum-key.gpg
+            https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        gpgcheck: yes
+        enabled: yes
+    - name: Install dependencies
+      yum:
+        update_cache: yes
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - kubelet
+        - kubeadm
+        - kubectl
+        - kubernetes-cni
+
+    - name: Enable and start kubelet
+      service:
+        name: kubelet
+        enabled: yes
+        state: started

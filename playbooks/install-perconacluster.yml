@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+
+- hosts: rancher_targets
+  tasks:
+    - name: Install Percona repository
+      yum:
+        name: "http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm"
+        state: present
+
+    - name: Install Percona
+      yum:
+        name: "Percona-XtraDB-Cluster-57"
+        state: present
+        update_cache: yes

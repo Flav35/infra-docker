@@ -1,0 +1,11 @@
+---
+version: '3.1'
+
+services:
+  registrator:
+    image: gliderlabs/registrator:v7
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    command: '-cleanup consul://10.20.30.1:8500'
+    deploy:
+      mode: global

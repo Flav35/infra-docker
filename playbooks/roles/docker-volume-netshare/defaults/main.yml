@@ -1,0 +1,3 @@
+---
+# defaults file for docker-volume-netshare
+version: "0.34"

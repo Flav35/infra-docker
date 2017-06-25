@@ -1,0 +1,19 @@
+#!/usr/bin/ansible-playbook
+
+- hosts: cluster
+  tasks:
+    - include_vars: passwd-vault
+    - name: Init rancher on master nodes
+      docker:
+        image: rancher/server
+        ports:
+          - "8080:8080"
+        state: started
+        detach: true
+        env:
+          CATTLE_DB_CATTLE_MYSQL_HOST: "{{ vip }}"
+          CATTLE_DB_CATTLE_MYSQL_PORT: 3306
+          CATTLE_DB_CATTLE_MYSQL_NAME: rancher
+          CATTLE_DB_CATTLE_USERNAME: rancher
+          CATTLE_DB_CATTLE_PASSWORD: "{{ rancher }}"
+      when: inventory_hostname == groups.cluster[0]

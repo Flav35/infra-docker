@@ -1,0 +1,3 @@
+---
+# vars file for docker-volume-netshare
+deb_url: "https://github.com/ContainX/docker-volume-netshare/releases/download/v{{ version }}/docker-volume-netshare_{{ version }}_amd64.deb"

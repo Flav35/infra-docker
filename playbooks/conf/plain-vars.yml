@@ -1,0 +1,31 @@
+# glusterfs
+glusterfs_volumes:
+  - traefik_conf
+  - asciinema_conf
+  - asciinema_data
+  - etherpad_data
+  - share
+  - registry
+  - jenkins
+  - consul_registrator
+
+# users
+deploy_user_name: "pollux"
+deploy_user_home: "/etc/{{ deploy_user_name }}"
+
+# config
+conf_directories:
+  - traefik-conf
+  - asciinema-conf
+
+# cacert
+ca_node: "dedi"
+ca_name: dedi
+cert_orga: "FH"
+cert_country: "FR"
+
+# consul
+consul_version: "0.8.4"
+consul_ca_file: "/etc/ssl/certs/dedi.crt"
+consul_cert_file: "/etc/ssl/certs/{{ ansible_fqdn }}.crt"
+consul_key_file: "/etc/ssl/private/{{ ansible_fqdn }}.key"

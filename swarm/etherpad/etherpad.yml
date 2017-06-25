@@ -1,0 +1,47 @@
+---
+version: '3.1'
+
+networks:
+  etherpad:
+    external: true
+
+volumes:
+  etherpad_data:
+    driver: nfs
+    driver_opts:
+      share: "10.20.30.2:/etherpad_data"
+
+secrets:
+  mysql_root_password:
+    external: true
+
+services:
+  mysql:
+    image: mysql
+    networks:
+      - etherpad
+    volumes:
+      - etherpad_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: "/run/secrets/mysql_root_password"
+    secrets:
+      - mysql_root_password
+
+  etherpad:
+    image: registry.flhar.ovh/etherpad-lite:latest
+    networks:
+      - etherpad
+    environment:
+      ETHERPAD_DB_HOST: "mysql"
+      ETHERPAD_DB_PASSWORD_FILE: "/run/secrets/mysql_root_password"
+    secrets:
+      - mysql_root_password
+    deploy:
+      mode: global
+      labels:
+        - "traefik.enable=true"
+        - "traefik.backend=etherpad"
+        - "traefik.backend.loadbalancer.sticky=true"
+        - "traefik.frontend.rule=Host:pads.fhardy.fr"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.port=9001"

@@ -1,0 +1,19 @@
+---
+version: '3.1'
+
+networks:
+  draw:
+    external: true
+
+services:
+  draw:
+    image: registry.flhar.ovh/draw.io
+    networks:
+      - draw
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.backend=draw"
+        - "traefik.frontend.rule=Host:draw.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.port=80"

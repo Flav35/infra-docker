@@ -1,0 +1,107 @@
+#!/usr/bin/env ansible-playbook
+---
+
+# Load vars
+- hosts: all
+  tasks:
+    - include_vars: conf/plain-vars.yml
+    - include_vars: conf/encrypt-vars.yml
+  tags:
+    - always
+
+# Manage docker
+- hosts: docker
+  roles:
+    - role: ansible-docker-install
+    - role: docker-volume-netshare
+    - role: rsyslog
+  tags: [ docker ]
+
+# Manage glusterfs cluster and volumes
+- hosts: glusterfs
+  roles:
+    - ansible-glusterfs
+  tags: [ glusterfs ]
+
+# Manage certs
+- hosts: cacert
+  roles:
+    - role: ansible-cacert
+  tags: [ cacert ]
+
+# Manage consul cluster
+- hosts: consul
+  roles:
+    - role: consul
+      force_upgrade: true
+      consul_type: server
+  tags: [ consul ]
+
+- hosts: haproxy
+  roles:
+    - role: haproxy
+      defaults_mode: tcp
+      defaults_options:
+        - tcplog
+        - dontlognull
+      services:
+        - name: consul
+          frontends:
+            - name: "consul_frontend"
+              address: "*"
+              port: 8181
+              use_backend: "consul_backend"
+          backends:
+            - name: "consul_backend"
+              servers:
+                - name: localhost
+                  address: "127.0.0.1"
+                  port: "8500"
+        - name: docker-services
+    - role: consul
+      force_upgrade: true
+      consul_type: client
+      consul_bind: "0.0.0.0"
+      consul_server_cluster: "{{ groups.consul }}"
+      enable_ui: true
+    - role: consul-template
+      vault_enabled: false
+      consul_ssl_enabled: false
+      consul_template_templates:
+        - src: ctemplates/docker-services.ctmpl
+          dest: /etc/haproxy/docker-services.cfg
+          command: "/bin/bash -c 'systemctl reload haproxy || true'"
+  tags: [ haproxy ]
+
+# Manage users
+- hosts: docker
+  tasks:
+    - name: Create deployment user
+      user:
+        name: "{{ deploy_user_name }}"
+        home: "{{ deploy_user_home }}"
+        groups: "docker"
+
+    - name: Enable ssh to "{{ deploy_user_name }}" for current user
+      authorized_key:
+        user: "{{ deploy_user_name }}"
+        key: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+  tags: [ users ]
+
+# Manage configuration
+- hosts: docker
+  tasks:
+    - name: Check directories
+      file:
+        name: "/data/{{ item }}"
+        state: directory
+      with_items: "{{ conf_directories }}"
+
+    - name: Mount gluster conf volumes
+      mount:
+        src: "{{ groups.glusterfs[0] }}:/{{ item }}"
+        name: "/data/{{ item }}"
+        fstype: "glusterfs"
+        state: mounted
+      with_items: "{{ conf_directories }}"
+  tags: [ config ]

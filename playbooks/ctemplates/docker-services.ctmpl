@@ -1,0 +1,31 @@
+frontend https_f
+    bind *:443
+    use_backend https_b
+
+backend https_b
+{%- raw -%}
+{{ range service "consul" }}
+  server {{ .Node }} {{ .Address }}:443{{ end }}
+{%- endraw %}
+
+
+frontend http_f
+    bind *:80
+    use_backend http_b
+
+backend http_b
+{%- raw -%}
+{{ range service "consul" }}
+  server {{ .Node }} {{ .Address }}:80{{ end }}
+{%- endraw %}
+
+
+frontend traefik_f
+    bind *:8080
+    use_backend traefik_b
+
+backend traefik_b
+{%- raw -%}
+{{ range service "consul" }}
+  server {{ .Node }} {{ .Address }}:8080{{ end }}
+{%- endraw -%}

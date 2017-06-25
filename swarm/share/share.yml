@@ -1,0 +1,28 @@
+---
+version: '3.1'
+
+networks:
+  share:
+    external: true
+
+volumes:
+  share:
+    driver: nfs
+    driver_opts:
+      share: "10.20.30.2:/share"
+
+services:
+  share:
+    image: php:apache
+    networks:
+      - share
+    volumes:
+      - share:/var/www/html
+    deploy:
+      mode: global
+      labels:
+        - "traefik.enable=true"
+        - "traefik.backend=share"
+        - "traefik.frontend.rule=Host:share.flhar.ovh"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.port=80"
