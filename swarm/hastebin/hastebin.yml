@@ -14,11 +14,14 @@ volumes:
 services:
   hastebin:
     image: ogarcia/haste-server
+    networks:
+      - hastebin
     volumes:
       - hastebin_data:/srv/haste/data
     deploy:
       mode: global
       labels:
+        - "traefik.enable=true"
         - "traefik.backend=haste"
         - "traefik.frontend.rule=Host:hastebin.fhardy.fr"
         - "traefik.frontend.passHostHeader=true"

@@ -12,6 +12,8 @@ networks:
     external: true
   asciinema:
     external: true
+  hastebin:
+    external: true
 
 volumes:
   traefik_conf:
@@ -28,6 +30,7 @@ services:
       - draw
       - etherpad
       - asciinema
+      - hastebin
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - traefik_conf:/etc/traefik
