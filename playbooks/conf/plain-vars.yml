@@ -8,6 +8,7 @@ glusterfs_volumes:
   - registry
   - jenkins
   - consul_registrator
+  - hastebin_data
 
 # users
 deploy_user_name: "pollux"

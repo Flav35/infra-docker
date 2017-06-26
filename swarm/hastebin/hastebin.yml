@@ -1,0 +1,25 @@
+---
+version: '3.1'
+
+networks:
+  hastebin:
+    external: true
+
+volumes:
+  hastebin_data:
+    driver: nfs
+    driver_opts:
+      share: "10.20.30.2:/hastebin_data"
+
+services:
+  hastebin:
+    image: ogarcia/haste-server
+    volumes:
+      - hastebin_data:/srv/haste/data
+    deploy:
+      mode: global
+      labels:
+        - "traefik.backend=haste"
+        - "traefik.frontend.rule=Host:hastebin.fhardy.fr"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.port=7777"
