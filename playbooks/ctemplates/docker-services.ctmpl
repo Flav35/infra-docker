@@ -5,7 +5,7 @@ frontend https_f
 backend https_b
 {%- raw -%}
 {{ range service "consul" }}
-  server {{ .Node }} {{ .Address }}:443{{ end }}
+  server {{ .Node }} {{ .Address }}:443 check{{ end }}
 {%- endraw %}
 
 
@@ -16,7 +16,7 @@ frontend http_f
 backend http_b
 {%- raw -%}
 {{ range service "consul" }}
-  server {{ .Node }} {{ .Address }}:80{{ end }}
+  server {{ .Node }} {{ .Address }}:80 check{{ end }}
 {%- endraw %}
 
 
@@ -27,5 +27,5 @@ frontend traefik_f
 backend traefik_b
 {%- raw -%}
 {{ range service "consul" }}
-  server {{ .Node }} {{ .Address }}:8080{{ end }}
+  server {{ .Node }} {{ .Address }}:8080 check{{ end }}
 {%- endraw -%}

@@ -45,18 +45,6 @@
         - tcplog
         - dontlognull
       services:
-        - name: consul
-          frontends:
-            - name: "consul_frontend"
-              address: "*"
-              port: 8181
-              use_backend: "consul_backend"
-          backends:
-            - name: "consul_backend"
-              servers:
-                - name: localhost
-                  address: "127.0.0.1"
-                  port: "8500"
         - name: docker-services
     - role: consul
       force_upgrade: true
