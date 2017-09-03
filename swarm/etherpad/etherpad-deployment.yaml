@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: etherpad
+  name: etherpad
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: etherpad
+    spec:
+      containers:
+      - env:
+        - name: ETHERPAD_DB_HOST
+          value: mysql
+        - name: ETHERPAD_DB_PASSWORD_FILE
+          value: /run/secrets/mysql_root_password
+        image: registry.flhar.ovh/etherpad-lite:latest
+        name: etherpad
+        resources: {}
+      restartPolicy: Always
+status: {}

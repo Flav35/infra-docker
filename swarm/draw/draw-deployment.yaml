@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: draw
+  name: draw
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: draw
+    spec:
+      containers:
+      - image: registry.flhar.ovh/draw.io
+        name: draw
+        resources: {}
+      restartPolicy: Always
+status: {}

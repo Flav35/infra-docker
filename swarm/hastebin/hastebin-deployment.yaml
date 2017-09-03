@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: hastebin
+  name: hastebin
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: hastebin
+    spec:
+      containers:
+      - image: ogarcia/haste-server
+        name: hastebin
+        resources: {}
+        volumeMounts:
+        - mountPath: /srv/haste/data
+          name: hastebin-data
+      restartPolicy: Always
+      volumes:
+      - name: hastebin-data
+        persistentVolumeClaim:
+          claimName: hastebin-data
+status: {}
