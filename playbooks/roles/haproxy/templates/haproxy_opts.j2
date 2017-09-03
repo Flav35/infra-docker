@@ -1,0 +1,5 @@
+{% if ansible_os_family == "Debian" %}
+EXTRAOPTS="{% for service in haproxy_services | default([]) %} -f /etc/haproxy/{{ service.name }}.cfg{% endfor %}"
+{% elif ansible_os_family == "RedHat" %}
+OPTIONS="{% for service in haproxy_services | default([]) %} -f /etc/haproxy/{{ service.name }}.cfg{% endfor %}"
+{% endif %}

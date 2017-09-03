@@ -1,0 +1,26 @@
+#!/usr/bin/env ansible-playbook
+---
+
+# Load vars
+- hosts: all
+  tasks:
+    - include_vars: conf/plain-vars.yml
+    - include_vars: conf/encrypt-vars.yml
+  tags:
+    - always
+
+# Manage docker
+- hosts: docker
+  roles:
+    - role: ansible-docker-install
+      storage_driver: "btrfs"
+    - role: docker-volume-netshare
+    - role: rsyslog
+  tags: [ docker ]
+
+- hosts: docker
+  roles:
+    - role: ansible-docker-install
+      upgrade: true
+  serial: 1
+  tags: [ docker-upgrade ]

@@ -13,14 +13,22 @@
 - hosts: docker
   roles:
     - role: ansible-docker-install
+      storage_driver: "btrfs"
     - role: docker-volume-netshare
     - role: rsyslog
   tags: [ docker ]
 
+- hosts: docker
+  roles:
+    - role: ansible-docker-install
+      upgrade: true
+  serial: 1
+  tags: [ docker-upgrade ]
+
 # Manage glusterfs cluster and volumes
 - hosts: glusterfs
   roles:
-    - ansible-glusterfs
+    - glusterfs
   tags: [ glusterfs ]
 
 # Manage certs
@@ -40,11 +48,11 @@
 - hosts: haproxy
   roles:
     - role: haproxy
-      defaults_mode: tcp
-      defaults_options:
+      haproxy_defaults_mode: tcp
+      haproxy_defaults_options:
         - tcplog
         - dontlognull
-      services:
+      haproxy_services:
         - name: docker-services
     - role: consul
       force_upgrade: true

@@ -1,14 +1,15 @@
 # glusterfs
+glusterfs_interface_fact: ansible_brcluster
+glusterfs_default_brick: "/srv/brick"
 glusterfs_volumes:
-  - traefik_conf
-  - asciinema_conf
-  - asciinema_data
-  - etherpad_data
-  - share
-  - registry
-  - jenkins
-  - consul_registrator
-  - hastebin_data
+  - "{{ glusterfs_default_brick }}/init"
+#  - "{{ glusterfs_default_brick }}/traefik_conf"
+#  - "{{ glusterfs_default_brick }}/etherpad_data"
+#  - "{{ glusterfs_default_brick }}/share"
+#  - "{{ glusterfs_default_brick }}/registry"
+#  - "{{ glusterfs_default_brick }}/jenkins"
+#  - "{{ glusterfs_default_brick }}/hastebin_data"
+#  - "{{ glusterfs_default_brick }}/ca"
 
 # users
 deploy_user_name: "pollux"

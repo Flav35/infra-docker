@@ -1,0 +1,40 @@
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Install Debian packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ packages }}"
+  notify:
+    - haproxy-restarted
+
+- name: Create global haproxy configuration file
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - haproxy-restarted
+
+- name: Create services configuration files
+  template:
+    src: service.cfg.j2
+    dest: "/etc/haproxy/{{ item.name }}.cfg"
+    mode: 0644
+    owner: root
+    group: root
+  with_items: "{{ haproxy_services | default([]) }}"
+  notify:
+    - haproxy-reloaded
+
+- name: Add services configuration files to haproxy opts
+  template:
+    src: haproxy_opts.j2
+    dest: "{{ haproxy_opts_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - haproxy-restarted

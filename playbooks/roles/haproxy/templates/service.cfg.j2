@@ -1,0 +1,18 @@
+{% for frontend in item.frontends | default([]) %}
+frontend {{ frontend.name }}
+    bind {{ frontend.address }}:{{ frontend.port }}
+
+    # ACL for frontend {{ frontend.name }}
+{% for acl in frontend.acls | default([]) %}
+    acl {{ acl.name }} {{ acl.criterion }} {{ acl.flags }} {{ acl.operators }} {{ acl.value }}
+{% endfor %}
+    use_backend {{ frontend.use_backend | default('') }}
+{% endfor %}
+
+{% for backend in item.backends | default([]) %}
+backend {{ backend.name }}
+    # Servers for backend {{ backend.name }}
+{% for server in backend.servers | default([]) %}
+    server {{ server.name }} {{ server.address }}:{{ server.port }}
+{% endfor %}
+{% endfor %}

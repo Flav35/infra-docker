@@ -6,6 +6,12 @@
     deb: "{{ deb_url }}"
     state: present
 
+- name: Configure NFS v3
+  lineinfile:
+    path: "/etc/default/docker-volume-netshare"
+    regexp: "^DKV_NETSHARE_OPTS"
+    line: "DKV_NETSHARE_OPTS=\"nfs -v 3\""
+
 - name: Start and enable service
   systemd:
     name: docker-volume-netshare

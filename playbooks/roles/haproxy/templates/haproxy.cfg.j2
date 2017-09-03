@@ -1,0 +1,66 @@
+global
+    # Log configuration
+{% for log_opt in haproxy_global_log_opts %}
+    log {{ log_opt.address }} {{ log_opt.facility }} {{ log_opt.level | default("") }}
+{% endfor %}
+
+    # Process configuration
+    chroot /var/lib/haproxy
+    user {{ haproxy_global_haproxy_user }}
+    group {{ haproxy_global_haproxy_group }}
+    maxconn {{ haproxy_global_maxconn }}
+    daemon
+
+    # Haproxy Stats
+{% if haproxy_global_stats.enable %}
+    stats socket {{ haproxy_global_stats.socket }} mode 600 level admin
+{% endif %}
+
+    # SSL global configuration
+    ssl-default-bind-ciphers {{ haproxy_global_ssl_ciphers | join(":") }}
+
+    # Other global configuration
+{% for opt in haproxy_global_other_opts %}
+    {{ opt.opt_key }} {{ opt.opt_value }}
+{% endfor %}
+
+defaults
+    # Default server mode
+    mode {{ haproxy_defaults_mode }}
+
+    # Default log configuration
+{% if haproxy_defaults_log.type == 'global' %}
+    log global
+{% else %}
+    log {{ haproxy_defaults_log.address }} {{ haproxy_defaults_log.facility }} {{ haproxy_defaults_log.level }}
+{% endif %}
+
+    # Default options
+{% for option in haproxy_defaults_options %}
+    option {{ option }}
+{% endfor %}
+
+    # Default error files
+{% for errorfile in haproxy_defaults_errorfiles %}
+    errorfile {{ errorfile.error_code }} {{ errorfile.file_path }}
+{% endfor %}
+
+    # Default timeouts
+{% for timeout in haproxy_defaults_timeouts %}
+    timeout {{ timeout.type }} {{ timeout.value }}
+{% endfor %}
+
+    # Others configurations
+{% for opt in haproxy_defaults_other_opts | default([]) %}
+    {{ opt.opt_key }} {{ opt.opt_value }}
+{% endfor %}
+
+{% if haproxy_simple_listen %}
+    # Listen
+    listen {{ haproxy_simple_listen_name }}
+        bind *:{{ haproxy_simple_listen_port }}
+        balance source
+{% for back_serv in haproxy_simple_listen_servers | default([]) %}
+        server {{ back_serv.name }} {{ back_serv.host }}
+{% endfor %}
+{% endif %}

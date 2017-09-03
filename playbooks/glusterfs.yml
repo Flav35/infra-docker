@@ -1,6 +1,20 @@
-#!/usr/bin/ansible-playbook
----
+#!/usr/bin/env ansible-playbook
 
-- hosts: glusterfs
+- hosts: cluster
+  tasks:
+    - include_vars: conf/plain-vars.yml
+    - include_vars: conf/encrypt-vars.yml
+  tags: [ always ]
+
+- hosts: cluster
   roles:
-    - glusterfs
+    - role: glusterfs
+      glusterfs_bind_address: "{{ ansible_brcluster.ipv4.address }}"
+  tags: [ glusterfs ]
+
+#- hosts: cluster
+#  roles:
+#    - role: heketi
+#      heketi_port: 18080
+#      heketi_configure_log: true
+#  tags: [ heketi ]

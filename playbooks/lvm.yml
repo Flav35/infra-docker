@@ -1,0 +1,22 @@
+#!/usr/bin/env ansible-playbook
+
+- hosts: cluster
+  tasks:
+    - include_vars: conf/plain-vars.yml
+    - include_vars: conf/encrypt-vars.yml
+  tags:
+    - always
+
+- hosts: cluster
+  become: true
+  roles:
+    - role: lvm
+      lvm_vg:
+        pvs: "/dev/sda4"
+        name: "cluster"
+      lvm_lvs:
+        vg: "{{ lvm_vg.name }}"
+        lvs:
+          - { name: gluster, size: 20 }
+          - { name: docker, mountpoint: /var/lib/docker, size: 20, fs: btrfs}
+          - { name: etcd, mountpoint: /var/lib/etcd, size: 20, fs: xfs}

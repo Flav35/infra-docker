@@ -1,0 +1,105 @@
+# Global configuration
+haproxy_global_haproxy_user: haproxy
+haproxy_global_haproxy_group: haproxy
+haproxy_global_maxconn: 4000
+haproxy_global_stats:
+  enable: true
+  socket: "/var/lib/haproxy/stats"
+haproxy_global_log_opts:
+- address: "/dev/log"
+  facility: "local0"
+# level: notice
+haproxy_global_ssl_ciphers:
+- "ECDH+AESGCM"
+- "DH+AESGCM"
+- "ECDH+AES256"
+- "DH+AES256"
+- "ECDH+AES128"
+- "DH+AES"
+- "ECDH+3DES"
+- "DH+3DES"
+- "RSA+AESGCM"
+- "RSA+AES"
+- "RSA+3DES"
+- "!aNULL"
+- "!MD5"
+- "!DSS"
+haproxy_global_other_opts:
+- opt_key:
+  opt_value:
+
+# Defaults section configuration
+haproxy_defaults_mode: "http"
+haproxy_defaults_log:
+  type: "global"
+# address: 127.0.0.1
+# facility: local0
+# level: notice
+haproxy_defaults_options:
+- httplog
+- dontlognull
+- http-server-close
+
+# defaults_error_base_path_var is replaced by defaults_error_base_path in vars/{{ ansible_os_family }}.yml var file.
+# It's a trick used to set default var per distribution...
+#defaults_error_base_path: ""
+haproxy_defaults_errorfiles:
+- error_code: 400
+  file_path: "{{ defaults_error_base_path_var }}/400.http"
+- error_code: 403
+  file_path: "{{ defaults_error_base_path_var }}/403.http"
+- error_code: 408
+  file_path: "{{ defaults_error_base_path_var }}/408.http"
+- error_code: 500
+  file_path: "{{ defaults_error_base_path_var }}/500.http"
+- error_code: 502
+  file_path: "{{ defaults_error_base_path_var }}/502.http"
+- error_code: 503
+  file_path: "{{ defaults_error_base_path_var }}/503.http"
+- error_code: 504
+  file_path: "{{ defaults_error_base_path_var }}/504.http"
+haproxy_defaults_timeouts:
+- type: "connect"
+  value: "10s"
+- type: "http-request"
+  value: "10s"
+- type: "check"
+  value: "10s"
+- type: "client"
+  value: "1m"
+- type: "server"
+  value: "1m"
+#haproxy_defaults_other_opts:
+#- opt_key:
+#  opt_value:
+
+# Simple LB
+haproxy_simple_listen: false
+haproxy_simple_listen_name: myservice
+haproxy_simple_listen_port: 80
+#haproxy_simple_listen_servers:
+#  - name: server1
+#    host_port: 127.0.0.1:8080
+haproxy_simple_listen_raw: ""
+
+# Create backends and frontends
+#haproxy_services:
+#  - name: myfirstservice
+#    frontends:
+#      - name: main
+#        address: "*"
+#        port: 80
+#        acls:
+#          - name: "url_myfirstservice"
+#            criterion: "hdr(host)"
+#            flags: ""
+#            operators: "-i"
+#            value: "localhost"
+#        use_backend: "main_back"
+#    backends:
+#      - name: main_back
+#        balance: "roundrobin"
+#        servers:
+#          - name: serv1
+#            address: "127.0.0.1"
+#            port: 8080

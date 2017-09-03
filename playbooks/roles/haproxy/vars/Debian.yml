@@ -1,0 +1,4 @@
+packages:
+  - haproxy
+defaults_error_base_path_var: "{{ haproxy_defaults_error_base_path | default('/etc/haproxy/errors') }}"
+haproxy_opts_file: "/etc/default/haproxy"
