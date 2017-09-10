@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Percona galera cluster chart
+name: percona-galera-chart
+version: 0.1.0

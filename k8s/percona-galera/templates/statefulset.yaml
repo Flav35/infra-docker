@@ -1,0 +1,130 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceName: {{ .Chart.Name }}-svc
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: percona
+        image: objectiflibre/percona-galera:5.7
+        args: ['--ignore-db-dir=lost+found']
+        env:
+        - name: MYSQL_ROOT_PASSWORD_FILE
+          value: "/run/secrets/mysql-root/mysql-root-password"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: percona
+          mountPath: /var/lib/mysql
+        - name: percona-conf
+          mountPath: /etc/mysql/percona-xtradb-cluster.conf.d/
+        - name: secret
+          mountPath: /run/secrets/mysql-root
+        readinessProbe:
+          exec:
+            command: ["mysql", "-h", "127.0.0.1", "-e", "SELECT 1"]
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+      - name: xtrabackup
+        image: objectiflibre/percona-galera:5.7
+        env:
+        - name: MYSQL_ROOT_PASSWORD_FILE
+          value: "/run/secrets/mysql-root/mysql-root-password"
+        ports:
+        - containerPort: 3307
+          name: mysql
+        volumeMounts:
+        - name: percona
+          mountPath: /var/lib/mysql
+        - name: percona-conf
+          mountPath: /etc/mysql/percona-xtradb-cluster.conf.d/
+        - name: secret
+          mountPath: /run/secrets/mysql-root
+        command:
+          - "/bin/bash"
+          - "-c"
+          - |
+            echo "Waiting for mysqld to be ready (accepting connections)"
+            until mysql -h 127.0.0.1 -e "SELECT 1" -u root -p$(cat $MYSQL_ROOT_PASSWORD_FILE); do sleep 10; done
+            grep password /etc/mysql/percona-xtradb-cluster.conf.d/client.cnf -q  || echo "password        = $(cat /run/secrets/mysql-root/mysql-root-password)" >> /etc/mysql/percona-xtradb-cluster.conf.d/client.cnf
+            grep wsrep_sst_auth /etc/mysql/percona-xtradb-cluster.conf.d/wsrep.cnf -q || echo "wsrep_sst_auth='$(cat /run/secrets/mysql-root/sst-user):$(cat /run/secrets/mysql-root/sst-password)'" >> /etc/mysql/percona-xtradb-cluster.conf.d/wsrep.cnf
+            mysql -h 127.0.0.1 -e "SELECT * FROM mysql.user WHERE user=$(cat /run/secrets/mysql-root/sst-user)" -u root -p$(cat $MYSQL_ROOT_PASSWORD_FILE) || mysql -h 127.0.0.1 -e "CREATE USER '$(cat /run/secrets/mysql-root/sst-user)'@'%' IDENTIFIED BY '$(cat /run/secrets/mysql-root/sst-password)'; GRANT RELOAD, LOCK TABLES, PROCESS, REPLICATION CLIENT ON *.* TO '$(cat /run/secrets/mysql-root/sst-user)'@'%'; FLUSH PRIVILEGES;" -u root -p$(cat $MYSQL_ROOT_PASSWORD_FILE)
+            exec nc -l -p 3307 -c 'xtrabackup --backup --galera-info --stream=xbstream --host=127.0.0.1 --user=root -p$(cat $MYSQL_ROOT_PASSWORD_FILE)'
+      volumes:
+      - name: percona-conf
+        emptyDir: {}
+      - name: config-map
+        configMap:
+          name: {{ .Release.Name }}-configmap
+      - name: secret
+        secret:
+          secretName: {{ .Chart.Name }}-secret
+      initContainers:
+      - name: percona-init
+        image: objectiflibre/percona-galera:5.7
+        env:
+        - name: MYSQL_ROOT_PASSWORD_FILE
+          value: "/run/secrets/mysql-root/mysql-root-password"
+        command:
+          - "/bin/bash"
+          - "-c"
+          - |
+            [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+            ordinal=${BASH_REMATCH[1]}
+            echo [mysqld] > /etc/mysql/percona-xtradb-cluster.conf.d/server-id.cnf
+            echo server-id=$((100 + $ordinal)) >> /etc/mysql/percona-xtradb-cluster.conf.d/server-id.cnf
+            echo wsrep_node_address=`hostname --ip-address` >> /etc/mysql/percona-xtradb-cluster.conf.d/server-id.cnf
+            cp /tmp/config/* /etc/mysql/percona-xtradb-cluster.conf.d/
+            [[ -d /var/lib/mysql/mysql ]] && exit 0
+            [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+            ordinal=${BASH_REMATCH[1]}
+            [[ $ordinal -eq 0 ]] && sed -i 's#wsrep_cluster_address = gcomm.*#wsrep_cluster_address = gcomm://#g' /etc/mysql/percona-xtradb-cluster.conf.d/wsrep.cnf
+            [[ $ordinal -eq 0 ]] && exit 0
+            nc {{ .Chart.Name }}-$(($ordinal-1)).{{ .Chart.Name }}-svc 3307 | xbstream -x -C /var/lib/mysql
+            xtrabackup --prepare --target-dir=/var/lib/mysql
+            cat <<EOF > /var/lib/mysql/grastate.dat
+            version: 2.1
+            uuid: $(cut -d: -f1 /var/lib/mysql/xtrabackup_galera_info)
+            seqno: $(cut -d: -f2 /var/lib/mysql/xtrabackup_galera_info)
+            cert_index:
+            EOF
+            chown -R mysql: /var/lib/mysql
+        volumeMounts:
+        - name: percona-conf
+          mountPath: /etc/mysql/percona-xtradb-cluster.conf.d/
+        - name: percona
+          mountPath: /var/lib/mysql
+        - name: config-map
+          mountPath: /tmp/config
+        - name: secret
+          mountPath: /run/secrets/mysql-root
+      volumes:
+      - name: percona-conf
+        emptyDir: {}
+      - name: config-map
+        configMap:
+          name: {{ .Chart.Name }}-configmap
+      - name: secret
+        secret:
+          secretName: {{ .Chart.Name }}-secret
+  volumeClaimTemplates:
+  - metadata:
+      name: percona
+      annotations:
+        volume.beta.kubernetes.io/storage-class: {{ .Values.storageClass }}
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.volumeSize }}
